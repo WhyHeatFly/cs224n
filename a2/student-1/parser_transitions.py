@@ -32,7 +32,10 @@ class PartialParse(object):
         ### Note: The root token should be represented with the string "ROOT"
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly 
         ###       reference the sentence object.  That is, remember to NOT modify the sentence object. 
-
+        self.stack = ["ROOT"]
+        # self.buffer = sentence 后续对buffer的处理会修改sentence，因为sentence本身是一个list指针
+        self.buffer = list(sentence)  # make a copy
+        self.dependencies = []
 
         ### END YOUR CODE
 
@@ -52,7 +55,26 @@ class PartialParse(object):
         ###         2. Left Arc
         ###         3. Right Arc
 
-
+        if transition == "S":
+            # self.stack.append(self.buffer.pop(0))
+            self.stack.append(self.buffer[0])
+            self.buffer.pop(0)
+        elif transition == "LA":
+            head = self.stack[-1]
+            dependent = self.stack[-2]
+            self.stack.pop(-2)
+            self.dependencies.append((head, dependent))
+            """
+            head = self.stack[-1]
+            self.stack.pop(-1)
+            dependent = self.stack[-1]
+            self.stack.pop(-1)
+            self.dependencies.append((head, dependent))
+            self.stack.append(head)
+            """
+        else:
+            dependent = self.stack.pop(-1)
+            self.dependencies.append((self.stack[-1], dependent))
         ### END YOUR CODE
 
     def parse(self, transitions):
@@ -102,10 +124,27 @@ def minibatch_parse(sentences, model, batch_size):
     ###             contains references to the same objects. Thus, you should NOT use the `del` operator
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
+    partial_parses = [PartialParse(sen) for sen in sentences]
+    unfinished_parses = list(partial_parses)   # shallow copy
 
+    while unfinished_parses:
+        batch_data = unfinished_parses[:batch_size]  # 取一批数据
+        transitions = model.predict(batch_data)
 
+        for pp, transition in zip(batch_data, transitions):  # 一批数据的每个数据进行一步step
+            pp.parse_step(transition)
+
+        # 过滤掉已经完成的
+        new_unfinished_parses = []
+        for pp in unfinished_parses:
+            if len(pp.buffer) == 0 and len(pp.stack) == 1:
+                continue
+            new_unfinished_parses.append(pp)
+        unfinished_parses = new_unfinished_parses
+
+    for pp in partial_parses:
+        dependencies.append(pp.dependencies)
     ### END YOUR CODE
-
     return dependencies
 
 
