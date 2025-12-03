@@ -110,7 +110,7 @@ def train_for_epoch(parser, train_data, dev_data, optimizer, loss_func, batch_si
             loss = loss_func(logits, train_y)
             loss.backward()
             optimizer.step()
-
+            
             ### END YOUR CODE
             prog.update(1)
             loss_meter.update(loss.item())
