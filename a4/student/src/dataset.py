@@ -1,5 +1,6 @@
 import argparse
 import random
+import re
 
 import torch
 from torch.utils.data import Dataset
@@ -101,7 +102,28 @@ class CharCorruptionDataset(Dataset):
     def __getitem__(self, idx):
         # TODO [part e]: see spec above
         ### YOUR CODE HERE ###
-        pass
+        document = self.data[idx]
+        # Randomly truncate the document
+        max_trunc_length = int(self.block_size * 7 / 8)
+        trunc_length = random.randint(4, max_trunc_length)
+        trunc_data = document[:trunc_length]
+        # Break into prefix, masked_content, suffix
+        masked_length = max(1, int(random.gauss(trunc_length / 4, trunc_length / 8 )))
+        masked_start = random.randint(1, trunc_length - masked_length - 1)
+        prefix = trunc_data[:masked_start]
+        masked_content = trunc_data[masked_start: masked_start + masked_length]
+        suffix = trunc_data[masked_start + masked_length:]
+        # Create masked string
+        masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
+        # Pad the masked string
+        masked_string += self.PAD_CHAR * (self.block_size + 1 - len(masked_string))
+
+        input_str = masked_string[:-1]
+        output_str = masked_string[1:]
+        x = torch.tensor([self.stoi[c] for c in input_str], dtype=torch.long)
+        y = torch.tensor([self.stoi[c] for c in output_str], dtype=torch.long)
+        return x, y
+    
         ### END YOUR CODE ###
 
 

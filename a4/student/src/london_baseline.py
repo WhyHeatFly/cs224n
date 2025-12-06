@@ -12,7 +12,14 @@ def main():
 
     # Compute accuracy in the range [0.0, 100.0]
     ### YOUR CODE HERE ###
-    pass
+    argp = argparse.ArgumentParser()
+    argp.add_argument('--dev_birth_places')
+    args = argp.parse_args()
+
+    data = open(args.dev_birth_places, encoding='utf-8').readlines()
+    predictions = ['London'] * len(data)
+    total, correct = utils.evaluate_places(args.dev_birth_places, predictions)
+    accuracy = correct / total * 100.0
     ### END YOUR CODE ###
 
     return accuracy
