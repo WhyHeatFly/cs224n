@@ -189,7 +189,7 @@ class NMT(nn.Module):
         X = X.permute(1, 2, 0)  # (b, e, src_len) conv1d需要(batch, channels, seq_len)
         X = self.post_embed_cnn(X)  # (b, e, src_len)
         X = X.permute(2, 0, 1)  # (src_len, b, e)
-        packed_X = pack_padded_sequence(X, lengths=source_lengths, enforce_sorted=True)  # 让 LSTM 只在真正的词上跑，不在 pad 上浪费时间，也不让 pad 的 fake state 污染序列表示。
+        packed_X = pack_padded_sequence(X, lengths=source_lengths, enforce_sorted=True)
 
         enc_hiddens, (last_hidden, last_cell) = self.encoder(packed_X)
         enc_hiddens, _ = pad_packed_sequence(enc_hiddens)  # (sec_len, b, h*2)
@@ -505,7 +505,7 @@ class NMT(nn.Module):
         """ Load the model from a file.
         @param model_path (str): path to model
         """
-        params = torch.load(model_path, map_location=lambda storage, loc: storage)
+        params = torch.load(model_path, map_location=lambda storage, loc: storage, weights_only=False,)
         args = params['args']
         model = NMT(vocab=params['vocab'], **args)
         model.load_state_dict(params['state_dict'])

@@ -278,7 +278,7 @@ def train(args: Dict):
                         print('load previously best model and decay learning rate to %f' % lr, file=sys.stderr)
 
                         # load model
-                        params = torch.load(model_save_path, map_location=lambda storage, loc: storage)
+                        params = torch.load(model_save_path, map_location=lambda storage, loc: storage, weights_only=False)
                         model.load_state_dict(params['state_dict'])
                         model = model.to(device)
 
@@ -362,11 +362,11 @@ def main():
     """ Main func.
     """
     args = docopt(__doc__)
+    args['--cuda'] = True
 
     # Check pytorch version
     assert(torch.__version__ >= "1.0.0"), "Please update your installation of PyTorch. You have {} and you should have version 1.0.0".format(torch.__version__)
-    
-    args['--cuda'] = True
+
     # seed the random number generators
     seed = int(args['--seed'])
     torch.manual_seed(seed)
