@@ -24,7 +24,7 @@ class CharCorruptionDataset(Dataset):
 
         self.block_size = block_size
         self.vocab_size = vocab_size
-        self.data = data.split('\n') # 按行分割数据
+        self.data = data.split('\n') # 按行分割数据,是一个字符串列表
 
         def __len__(self):
             return len(self.data)

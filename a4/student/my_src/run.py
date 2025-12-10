@@ -4,7 +4,7 @@ import argparse  # 命令行参数解析
 import dataset  # 数据集模块
 import models   # 模型模块
 import trainer  # 训练模块
-
+import utils    # 工具模块
 import torch
 from tqdm import tqdm  # 进度条显示
 from torch.utils.tensorboard import SummaryWriter
@@ -91,4 +91,28 @@ elif args.function == 'finetune':
     trainer = trainer.Trainer(model, finetun_dataset, None, tconf)
     trainer.train()
     torch.save(model.state_dict(), args.writing_params_path)
+elif args.function == 'evaluate':
+    assert args.outputs_path is not None
+    assert args.eval_corpus_path is not None
+    assert args.reading_params_path is not None
+    model.load_state_dict(torch.load(args.reading_params_path))
+    correct = 0
+    total = 0
+    with open(args.outputs_path, 'w', encoding='utf-8') as fout:
+        predictions = []
+        for line in tqdm(open(args.eval_corpus_path, encoding='utf-8')):
+            x = line.split('\t')[0]
+            x = x + '??'
+            x = torch.tensor([pretrain_dataset.stoi[s] for s in x],
+                             dtype=torch.long)[None,...].to(device)
+            pred = utils.sample(model, x, 32, sample=False)[0]
+            completion = ''.join([pretrain_dataset.itos[int(i)] for i in pred])
+            pred = completion.split('??')[1]
+            predictions.append(pred)
+            fout.write(pred + '\n')
+        total, correct = utils.evaluate_places(args.eval_corpus_path, predictions)
+    if total > 0:
+        print(f'Correct: {correct} out of {total}: {correct/total*100}%')
+    else:
+        print(f'Predictions written to {args.outputs_path}; no targets provided')
 

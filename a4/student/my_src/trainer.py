@@ -115,18 +115,18 @@ class Trainer:
                         config.writer.add_scalar('train/loss', loss.item(), step)
                         config.writer.add_scalar('train/lr', lr, step)
                     
-                    step += 1
-                if not is_train:
-                    logger.info("test loss: %f", np.mean(losses))
+                step += 1
+            if not is_train:
+                logger.info("test loss: %f", np.mean(losses))
             
-            self.tokens = 0  # 重置token计数
-            for epoch in range(config.max_epochs):
-
-                run_epoch('train')
-                if self.test_dataset is not None:
-                    run_epoch('test')
+        self.tokens = 0  # 重置token计数
+        for epoch in range(config.max_epochs):
+            
+            run_epoch('train')
+            if self.test_dataset is not None:
+                run_epoch('test')
                 
-                self.save_checkpoint()
+            self.save_checkpoint()
 
 
 
